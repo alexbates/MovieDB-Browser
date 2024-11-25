@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A single page web application for browsing movies and TV shows." />
+	<title>MovieDB Browser</title>
+    <link rel="stylesheet" href="/styles/app.css">
+	<script src="/scripts/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.0/mustache.min.js"></script>
+    <script src="/scripts/config.js"></script>
+    <script src="/scripts/app.js"></script>
+    <!-- Mustache templates -->
+    <script type="text/template" id="displayTVVideos">
+        {{#videos}}
+        <div class="video">
+            <img class="videoimg" src="{{cover}}">
+            <div class="videoright">
+                <a href="javascript:void(0);" onclick="displayTVDetails('{{videoid}}'); return false;">{{videotitle}}</a>
+            </div>
+        </div>
+        {{/videos}}
+    </script>
+    <script type="text/template" id="displayMovieVideos">
+        {{#videos}}
+        <div class="video">
+            <img class="videoimg" src="{{cover}}">
+            <div class="videoright">
+                <a href="javascript:void(0);" onclick="displayMovieDetails('{{videoid}}'); return false;">{{videotitle}}</a>
+            </div>
+        </div>
+        {{/videos}}
+    </script>
+    <script type="text/template" id="castDetails">
+        <h3>{{c_name}}</h3>
+        <p>Gender: {{c_gender}}</p>
+        <p>Birthday: {{c_birthday}}</p>
+        <a href="{{c_imdb}}" target="_blank">IMDB Profile</a>
+        <p class="biography">Biography: {{{c_biography}}}</p>
+    </script>
+    <script type="text/template" id="displayTVDetails">
+        <div class="backdrop-overlay" style="background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 25%, #292929 75%), url({{backdrop_path}}) no-repeat top/cover;">
+        <div><button type="button" id="btnHide"><img class="btnHideImg" src="/images/x.png" alt=""></button></div>
+        <div class="videodata">
+            <div class="videoleft">
+                <img class="cover-photo" src="{{poster_path}}" alt="Poster">
+                <span class="rating">{{vote_average}}/10</span>
+            </div>
+            <div class="videotext">
+                <h1>
+                    <span class="title">{{title}}</span>
+                </h1>
+                {{{genres}}}
+                <p class="overview">{{overview}}</p>
+                <span class="episodes">{{number_of_episodes}} Episodes</span>
+                <p>First Air Date: {{first_air_date}}</p>
+                <p>Last Air Date: {{{last_air_date}}}</p>
+                <p class="p-prod-c">Networks</p>
+                <div class="prod-companies">{{{networks}}}</div>
+                {{#cast.length}}
+                <h2>Cast</h2>
+                <div class="cast-container">
+                    {{#cast}}
+                    <div class="cast" data-castid="{{cast_id}}" style="background: url({{cast_profile}}) no-repeat top/cover;">
+                        <span class="cast-name">{{cast_name}}</span><br>
+                        <span class="cast-character">{{cast_character}}</span>
+                    </div>
+                    {{/cast}}
+                </div>
+                <div id="cast-details"></div>
+                {{/cast.length}}
+                {{#reviews.length}}
+                <h2>Reviews</h2>
+                {{#reviews}}
+                <div class="review">
+                    <span class="review-username">{{username}}</span><br>
+                    <span class="review-date">{{created_at}}</span>
+                    <p class="review-content">{{{content}}}</p>
+                </div>
+                {{/reviews}}
+                {{/reviews.length}}
+            </div>
+        </div>
+        </div>
+    </script>
+    <script type="text/template" id="displayMovieDetails">
+        <div class="backdrop-overlay" style="background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 25%, #292929 75%), url({{backdrop_path}}) no-repeat top/cover;">
+        <div><button type="button" id="btnHide"><img class="btnHideImg" src="/images/x.png" alt=""></button></div>
+        <div class="videodata">
+            <div class="videoleft">
+                <img class="cover-photo" src="{{poster_path}}" alt="Poster">
+                <span class="rating">{{vote_average}}/10</span>
+            </div>
+            <div class="videotext">
+                <h1>
+                    <span class="title">{{title}}</span>
+                </h1>
+                {{{genres}}}
+                <p class="overview">{{overview}}</p>
+                <span class="episodes">{{runtime}} Min</span>
+                <p>Release Date: {{release_date}}</p>
+                <p>Spoken Languages: {{spoken_languages}}</p>
+                <p class="p-prod-c">Production Companies</p>
+                <div class="prod-companies">{{{prod_companies}}}</div>
+                {{#cast.length}}
+                <h2>Cast</h2>
+                <div class="cast-container">
+                    {{#cast}}
+                    <div class="cast" data-castid="{{cast_id}}" style="background: url({{cast_profile}}) no-repeat top/cover;">
+                        <span class="cast-name">{{cast_name}}</span><br>
+                        <span class="cast-character">{{cast_character}}</span>
+                    </div>
+                    {{/cast}}
+                </div>
+                <div id="cast-details"></div>
+                {{/cast.length}}
+                {{#reviews.length}}
+                <h2>Reviews</h2>
+                {{#reviews}}
+                <div class="review">
+                    <span class="review-username">{{username}}</span><br>
+                    <span class="review-date">{{created_at}}</span>
+                    <p class="review-content">{{{content}}}</p>
+                </div>
+                {{/reviews}}
+                {{/reviews.length}}
+            </div>
+        </div>
+        </div>
+    </script>
+</head>
+<body>
+<header>
+	<img class="logo" src="/images/logo.png" alt="MovieDB"><h1>MovieDB Browser</h1>
+	<nav class="navlinks">
+		<ul>
+			<li class="navactive"><span onclick="showTopMovies();">Top Movies</span></li>
+			<li><span onclick="showTopTVShows();">Top TV Shows</span></li>
+			<li><span onclick="showMovieSearch();">Movie Search</span></li>
+            <li><span onclick="showTVShowSearch();">TV Show Search</span></li>
+		</ul>
+	</nav>
+</header>
+<main>
+    <p id="moviesearchinfo" class="pageinfo">Use this tool to find movies by their original, translated and alternative titles.</p>
+    <p id="tvsearchinfo" class="pageinfo">Use this tool to find TV shows by their original, translated and alternative titles.</p>
+
+    <div class="searchform">
+        <input id="search-input-m" id="name" name="name" placeholder="Search Movies" required type="text" autocomplete="off">
+        <button class="search-btn-m" name="submit" type="submit">
+            <span class="searchbtn-icon"><img src="/images/search.png" alt=""></span>
+        </button>
+        <div id="search-history" class="search-history"></div>
+    </div>
+    <div class="searchform2">
+        <input id="search-input-t" id="name" name="name" placeholder="Search TV Shows" required type="text" autocomplete="off">
+        <button class="search-btn-t" name="submit" type="submit">
+            <span class="searchbtn-icon"><img src="/images/search.png" alt=""></span>
+        </button>
+        <div id="search-history" class="search-history"></div>
+    </div>
+
+	<div id="resultcount"></div>
+    <div id="resultcount2"></div>
+    <div id="resultcount3" class="pageinfo"></div>
+    <div id="resultcount4" class="pageinfo"></div>
+    <div id="videocontainer"></div>
+    <div id="videocontainer2"></div>
+    <div id="videocontainer3"></div>
+    <div id="videocontainer4"></div>
+    <div id="pagination"></div>
+    <div id="pagination2"></div>
+    <div id="pagination3"></div>
+    <div id="pagination4"></div>
+    <div id="videodetail"></div>
+</main>
+</body>
+</html>
